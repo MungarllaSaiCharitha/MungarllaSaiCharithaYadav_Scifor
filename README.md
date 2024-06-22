@@ -39,6 +39,17 @@ This is a Streamlit-based face recognition application. It allows users to add n
 - **Add Face:** Upload an image and assign a name to add a new face to the recognition system.
 - **Identify Face:** Use your webcam to identify faces in real-time.
 
+## Applications
+
+This face recognition app can be utilized in various scenarios, including:
+
+- **Attendance Management:** Automatically track attendance in classrooms, offices, and events by recognizing faces.
+- **Criminal Record Check:** Identify known criminals during investigations by comparing faces with a database of criminal records.
+- **Security Systems:** Enhance security in restricted areas by allowing access only to authorized personnel.
+- **Customer Recognition:** Improve customer service in retail by recognizing regular customers and offering personalized services.
+- **Event Management:** Streamline check-ins at events and conferences by recognizing attendees as they arrive.
+
+
 ## Folder Structure
 ```bash
 face-recognition-app/
