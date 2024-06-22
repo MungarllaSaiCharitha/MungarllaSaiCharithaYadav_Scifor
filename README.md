@@ -40,12 +40,14 @@ This is a Streamlit-based face recognition application. It allows users to add n
 - **Identify Face:** Use your webcam to identify faces in real-time.
 
 ## Folder Structure
+```bash
 face-recognition-app/
 │
 ├── app.py # Main application script
 ├── requirements.txt # List of dependencies
 ├── .gitignore # Files and directories to be ignored by git
 └── README.md # Project description and setup instructions
+```
 
 ## License
 
