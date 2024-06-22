@@ -67,7 +67,7 @@ This project is licensed under the MIT License.
    git init
    git add .
    git commit -m "Initial commit"
-   git remote add origin https://github.com/yourusername/face-recognition-app.git
+   git remote add origin https://github.com/senthilthangaiah/face-recognition-app.git
    git push -u origin master
 ```
 
