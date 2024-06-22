@@ -16,7 +16,7 @@ This is a Streamlit-based face recognition application. It allows users to add n
 
 1. Clone the repository:
     ```bash
-    git clone https://github.com/yourusername/face-recognition-app.git
+    git clone https://github.com/senthilthangaiah/face-recognition-app.git
     cd face-recognition-app
     ```
 
