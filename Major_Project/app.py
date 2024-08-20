@@ -37,6 +37,9 @@ if os.path.exists(data_path):
 else:
     face_recognizer = None
 
+# Initialize the face cascade
+face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+
 # Streamlit app
 st.title("Face Recognition App")
 
@@ -88,8 +91,6 @@ elif app_mode == "Identify Face":
             if not camera.isOpened():
                 st.error("Camera not available")
             else:
-                face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-
                 while run:
                     ret, frame = camera.read()
                     if not ret:
