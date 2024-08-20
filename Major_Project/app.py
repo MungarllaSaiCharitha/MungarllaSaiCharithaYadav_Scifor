@@ -22,7 +22,7 @@ def train_recognizer(data_path):
     face_recognizer.train(faces, np.array(labels))
     return face_recognizer
 
-# Function to save new face with a unique label
+# Function to save a new face with a unique label
 def save_face(image, name):
     if not os.path.exists('known_faces'):
         os.makedirs('known_faces')
@@ -61,7 +61,6 @@ elif app_mode == "Identify Face":
     FRAME_WINDOW = st.image([])
 
     camera = cv2.VideoCapture(0)
-
     face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
     while run:
@@ -84,6 +83,6 @@ elif app_mode == "Identify Face":
             cv2.putText(frame, name, (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
 
         FRAME_WINDOW.image(frame[:, :, ::-1])
-    else:
-        camera.release()
 
+    camera.release()
+    cv2.destroyAllWindows()
