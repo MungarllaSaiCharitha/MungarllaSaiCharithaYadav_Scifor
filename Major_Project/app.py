@@ -85,4 +85,3 @@ elif app_mode == "Identify Face":
         FRAME_WINDOW.image(frame[:, :, ::-1])
 
     camera.release()
-    cv2.destroyAllWindows()
