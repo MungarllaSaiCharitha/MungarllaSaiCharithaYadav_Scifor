@@ -1,5 +1,7 @@
 # face_recognition
+
 Face Recognition
+
 # Face Recognition App
 
 This is a Streamlit-based face recognition application. It allows users to add new faces and identify faces using a webcam.
@@ -15,22 +17,24 @@ This is a Streamlit-based face recognition application. It allows users to add n
 ## Installation
 
 1. Clone the repository:
-    ```bash
-    git clone https://github.com/senthilthangaiah/face-recognition.git
-    cd face-recognition-app
-    ```
+
+   ```bash
+   git clone https://github.com/senthilthangaiah/face-recognition.git
+   cd face-recognition-app
+   ```
 
 2. Install the required packages:
-    ```bash
-    pip install -r requirements.txt
-    ```
+   ```bash
+   pip install -r requirements.txt
+   ```
 
 ## Usage
 
 1. Run the Streamlit app:
-    ```bash
-    streamlit run app.py
-    ```
+
+   ```bash
+   streamlit run app.py
+   ```
 
 2. Open your web browser and go to `http://localhost:8501`.
 
@@ -49,8 +53,8 @@ This face recognition app can be utilized in various scenarios, including:
 - **Customer Recognition:** Improve customer service in retail by recognizing regular customers and offering personalized services.
 - **Event Management:** Streamline check-ins at events and conferences by recognizing attendees as they arrive.
 
-
 ## Folder Structure
+
 ```bash
 face-recognition-app/
 │
@@ -63,6 +67,7 @@ face-recognition-app/
 ## License
 
 This project is licensed under the MIT License.
+
 ```bash
    git init
    git add .
@@ -70,4 +75,3 @@ This project is licensed under the MIT License.
    git remote add origin https://github.com/senthilthangaiah/face-recognition.git
    git push -u origin master
 ```
-
