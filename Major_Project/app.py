@@ -84,6 +84,6 @@ elif app_mode == "Identify Face":
             cv2.putText(frame, name, (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
 
         FRAME_WINDOW.image(frame[:, :, ::-1])
-    else:
-        camera.release()
 
+    # Release the camera when the loop finishes
+    camera.release()
