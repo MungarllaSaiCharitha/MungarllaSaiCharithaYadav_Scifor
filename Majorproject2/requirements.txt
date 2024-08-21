@@ -1,0 +1,6 @@
+streamlit-webrtc
+opencv-python-headless
+streamlit
+numpy
+pillow
+opencv-contrib-python
