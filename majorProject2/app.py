@@ -60,9 +60,9 @@ elif app_mode == "Identify Face":
     mode = st.radio("Choose input method:", ("Webcam", "Upload Image"))
 
     if mode == "Webcam":
+        st.subheader("Live Webcam Feed")
         run = st.checkbox("Run")
         FRAME_WINDOW = st.image([])
-
         camera = cv2.VideoCapture(0)
         face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
