@@ -1,40 +1,44 @@
 import streamlit as st
-import requests
+import cv2
 import os
-from PIL import Image, ImageDraw
-import io
 import numpy as np
-import dotenv
+from PIL import Image
 
-# Load environment variables from .env file
-dotenv.load_dotenv()
+# Function to create a face recognizer and train it with known faces
+def train_recognizer(data_path):
+    face_recognizer = cv2.face.LBPHFaceRecognizer_create()
+    faces, labels = [], []
 
-# Get API key and endpoint from environment variables
-API_KEY = os.getenv('API_TOKEN')
-ENDPOINT = os.getenv('ENDPOINT_URL')
+    for name in os.listdir(data_path):
+        person_path = os.path.join(data_path, name)
+        if os.path.isdir(person_path):
+            label = int(name.split('_')[0])
+            for image_name in os.listdir(person_path):
+                image_path = os.path.join(person_path, image_name)
+                image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+                faces.append(image)
+                labels.append(label)
+    
+    face_recognizer.train(faces, np.array(labels))
+    return face_recognizer
 
-# Function to call the Microsoft Azure Face API
-def recognize_faces(image_data, api_key, endpoint):
-    headers = {
-        "Ocp-Apim-Subscription-Key": api_key,
-        "Content-Type": "application/octet-stream"
-    }
-    
-    params = {
-        "returnFaceId": "true",
-        "returnFaceLandmarks": "false",
-        "returnFaceAttributes": "age,gender,smile,facialHair,glasses,emotion"
-    }
-    
-    response = requests.post(endpoint, params=params, headers=headers, data=image_data)
-    
-    if response.status_code != 200:
-        raise Exception(f"Error: {response.status_code} - {response.text}")
-    
-    return response.json()
+# Function to save a new face with a unique label
+def save_face(image, name):
+    if not os.path.exists('known_faces'):
+        os.makedirs('known_faces')
+    person_path = os.path.join('known_faces', f"{len(os.listdir('known_faces'))}_{name}")
+    os.makedirs(person_path)
+    image.save(os.path.join(person_path, "1.jpg"))
+
+# Load known faces on start
+data_path = 'known_faces'
+if os.path.exists(data_path):
+    face_recognizer = train_recognizer(data_path)
+else:
+    face_recognizer = None
 
 # Streamlit app
-st.title("Face Recognition App with Azure Face API")
+st.title("Face Recognition App")
 
 st.sidebar.title("Options")
 app_mode = st.sidebar.selectbox("Choose the app mode", ["Add Face", "Identify Face"])
@@ -45,75 +49,35 @@ if app_mode == "Add Face":
     uploaded_file = st.file_uploader("Upload an image", type=["jpg", "png"])
 
     if uploaded_file and name:
-        image = Image.open(uploaded_file)
+        image = Image.open(uploaded_file).convert("L")
         st.image(image, caption=f"Uploaded Image of {name}", use_column_width=True)
-
-        # Save the face with the provided name locally
-        if not os.path.exists('known_faces'):
-            os.makedirs('known_faces')
-        person_path = os.path.join('known_faces', f"{len(os.listdir('known_faces'))}_{name}")
-        os.makedirs(person_path)
-        image.convert("L").save(os.path.join(person_path, "1.jpg"))
-
+        save_face(image, name)
         st.success(f"Face of {name} has been saved successfully!")
+        face_recognizer = train_recognizer(data_path)  # Retrain recognizer with new face
 
 elif app_mode == "Identify Face":
-    st.header("Identify faces from camera or uploaded image")
-    mode = st.radio("Choose input method:", ("Webcam", "Upload Image"))
+    st.header("Identify faces from uploaded image")
+    uploaded_file = st.file_uploader("Upload an image to identify", type=["jpg", "png"])
 
-    if mode == "Webcam":
-        run = st.checkbox("Run")
-        FRAME_WINDOW = st.image([])
+    if uploaded_file:
+        image = Image.open(uploaded_file).convert("L")
+        st.image(image, caption="Uploaded Image", use_column_width=True)
+        image_np = np.array(image)
 
-        camera = cv2.VideoCapture(0)
-        while run:
-            ret, frame = camera.read()
-            if not ret:
-                st.error("Failed to capture image")
-                break
+        face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+        faces = face_cascade.detectMultiScale(image_np, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
 
-            # Convert frame to bytes for API call
-            _, img_encoded = cv2.imencode('.jpg', frame)
-            img_bytes = img_encoded.tobytes()
+        if len(faces) > 0 and face_recognizer:
+            for (x, y, w, h) in faces:
+                face_roi = image_np[y:y+h, x:x+w]
+                label, confidence = face_recognizer.predict(face_roi)
+                name = "Unknown"
+                if confidence is not None and confidence < 100:
+                    name = [name for name in os.listdir(data_path) if name.startswith(f"{label}_")][0].split('_')[1]
 
-            # Call Azure Face API
-            if API_KEY and ENDPOINT:
-                try:
-                    faces = recognize_faces(img_bytes, API_KEY, ENDPOINT)
-                    for face in faces:
-                        rect = face['faceRectangle']
-                        cv2.rectangle(frame, (rect['left'], rect['top']),
-                                      (rect['left'] + rect['width'], rect['top'] + rect['height']),
-                                      (0, 255, 0), 2)
-                except Exception as e:
-                    st.error(f"Failed to process image: {e}")
+                cv2.rectangle(image_np, (x, y), (x+w, y+h), (0, 255, 0), 2)
+                cv2.putText(image_np, name, (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
 
-            FRAME_WINDOW.image(frame[:, :, ::-1])
-        camera.release()
-
-    elif mode == "Upload Image":
-        uploaded_file = st.file_uploader("Upload an image to identify", type=["jpg", "png"])
-
-        if uploaded_file and API_KEY and ENDPOINT:
-            image = Image.open(uploaded_file)
-            st.image(image, caption="Uploaded Image", use_column_width=True)
-
-            # Convert image to bytes for API call
-            img_bytes = io.BytesIO()
-            image.save(img_bytes, format="JPEG")
-            img_bytes = img_bytes.getvalue()
-
-            # Call Azure Face API
-            try:
-                faces = recognize_faces(img_bytes, API_KEY, ENDPOINT)
-                draw = ImageDraw.Draw(image)
-                for face in faces:
-                    rect = face['faceRectangle']
-                    draw.rectangle([(rect['left'], rect['top']),
-                                    (rect['left'] + rect['width'], rect['top'] + rect['height'])],
-                                   outline="red", width=3)
-                st.image(image, caption="Processed Image", use_column_width=True)
-            except Exception as e:
-                st.error(f"Failed to process image: {e}")
+            st.image(image_np, caption="Processed Image", use_column_width=True)
         else:
-            st.write("Please upload an image and ensure the API is configured.")
+            st.write("No faces detected or face recognizer is not trained.")
