@@ -63,31 +63,35 @@ elif app_mode == "Identify Face":
         st.subheader("Live Webcam Feed")
         run = st.checkbox("Run")
         FRAME_WINDOW = st.image([])
-        camera = cv2.VideoCapture(0)
-        face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+        camera = cv2.VideoCapture(0)  # Try different indices if needed
 
-        while run:
-            ret, frame = camera.read()
-            if not ret:
-                st.error("Failed to capture image")
-                break
+        if not camera.isOpened():
+            st.error("Failed to access the webcam. Ensure your webcam is connected and accessible.")
+        else:
+            face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
-            gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            faces = face_cascade.detectMultiScale(gray_frame, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
+            while run:
+                ret, frame = camera.read()
+                if not ret:
+                    st.error("Failed to capture image from webcam.")
+                    break
 
-            for (x, y, w, h) in faces:
-                face_roi = gray_frame[y:y+h, x:x+w]
-                label, confidence = face_recognizer.predict(face_roi) if face_recognizer else (None, None)
-                name = "Unknown"
-                if confidence is not None and confidence < 100:
-                    name = [name for name in os.listdir(data_path) if name.startswith(f"{label}_")][0].split('_')[1]
+                gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                faces = face_cascade.detectMultiScale(gray_frame, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
 
-                cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
-                cv2.putText(frame, name, (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+                for (x, y, w, h) in faces:
+                    face_roi = gray_frame[y:y+h, x:x+w]
+                    label, confidence = face_recognizer.predict(face_roi) if face_recognizer else (None, None)
+                    name = "Unknown"
+                    if confidence is not None and confidence < 100:
+                        name = [name for name in os.listdir(data_path) if name.startswith(f"{label}_")][0].split('_')[1]
 
-            FRAME_WINDOW.image(frame[:, :, ::-1])
+                    cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
+                    cv2.putText(frame, name, (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
 
-        camera.release()
+                FRAME_WINDOW.image(frame[:, :, ::-1])
+
+            camera.release()
 
     elif mode == "Upload Image":
         uploaded_file = st.file_uploader("Upload an image to identify", type=["jpg", "png"])
