@@ -1,3 +1,4 @@
+requests
 streamlit
 opencv-contrib-python-headless
 numpy
