@@ -4,8 +4,15 @@ import os
 from PIL import Image, ImageDraw
 import io
 import numpy as np
+import dotenv
 
-api_key = "229fc1b7aeab4523b7562e6c698f009f"
+# Load environment variables from .env file
+dotenv.load_dotenv()
+
+# Get API key and endpoint from environment variables
+API_KEY = os.getenv('API_TOKEN')
+ENDPOINT = os.getenv('ENDPOINT_URL')
+
 # Function to call the Microsoft Azure Face API
 def recognize_faces(image_data, api_key, endpoint):
     headers = {
@@ -31,11 +38,6 @@ st.title("Face Recognition App with Azure Face API")
 
 st.sidebar.title("Options")
 app_mode = st.sidebar.selectbox("Choose the app mode", ["Add Face", "Identify Face"])
-
-# Sidebar for API key and endpoint input
-st.sidebar.header("API Configuration")
-api_key = st.sidebar.text_input("API Key", type="password")
-endpoint = st.sidebar.text_input("Endpoint URL")
 
 if app_mode == "Add Face":
     st.header("Add a new face")
@@ -75,9 +77,9 @@ elif app_mode == "Identify Face":
             img_bytes = img_encoded.tobytes()
 
             # Call Azure Face API
-            if api_key and endpoint:
+            if API_KEY and ENDPOINT:
                 try:
-                    faces = recognize_faces(img_bytes, api_key, endpoint)
+                    faces = recognize_faces(img_bytes, API_KEY, ENDPOINT)
                     for face in faces:
                         rect = face['faceRectangle']
                         cv2.rectangle(frame, (rect['left'], rect['top']),
@@ -92,7 +94,7 @@ elif app_mode == "Identify Face":
     elif mode == "Upload Image":
         uploaded_file = st.file_uploader("Upload an image to identify", type=["jpg", "png"])
 
-        if uploaded_file and api_key and endpoint:
+        if uploaded_file and API_KEY and ENDPOINT:
             image = Image.open(uploaded_file)
             st.image(image, caption="Uploaded Image", use_column_width=True)
 
@@ -103,7 +105,7 @@ elif app_mode == "Identify Face":
 
             # Call Azure Face API
             try:
-                faces = recognize_faces(img_bytes, api_key, endpoint)
+                faces = recognize_faces(img_bytes, API_KEY, ENDPOINT)
                 draw = ImageDraw.Draw(image)
                 for face in faces:
                     rect = face['faceRectangle']
@@ -114,4 +116,4 @@ elif app_mode == "Identify Face":
             except Exception as e:
                 st.error(f"Failed to process image: {e}")
         else:
-            st.write("Please upload an image and configure the API.")
+            st.write("Please upload an image and ensure the API is configured.")
