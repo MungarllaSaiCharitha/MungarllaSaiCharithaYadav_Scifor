@@ -65,13 +65,13 @@ elif app_mode == "Identify Face":
 
         if img_file_buffer is not None:
             # To read image file buffer as a PIL Image:
-            img = Image.open(img_file_buffer)
+            img = Image.open(img_file_buffer).convert("RGB")
 
             # To convert PIL Image to numpy array:
             img_array = np.array(img)
+            gray = cv2.cvtColor(img_array, cv2.COLOR_RGB2GRAY)
 
-            # Process the image for face detection and recognition
-            gray = cv2.cvtColor(img_array, cv2.COLOR_BGR2GRAY)
+            # Load the face cascade
             face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
             faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
 
