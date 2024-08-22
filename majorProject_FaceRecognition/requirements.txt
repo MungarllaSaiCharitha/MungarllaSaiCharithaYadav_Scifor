@@ -2,4 +2,4 @@ streamlit
 opencv-contrib-python-headless
 numpy
 pillow
-streamlit-webrtc==0.47.7
+streamlit-webrtc
