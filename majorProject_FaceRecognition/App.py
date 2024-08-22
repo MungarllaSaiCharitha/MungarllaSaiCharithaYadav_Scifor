@@ -3,38 +3,26 @@ import cv2
 import os
 import numpy as np
 from PIL import Image
-from streamlit_webrtc import VideoTransformerBase, webrtc_streamer
 
-# Function to preprocess images
-def preprocess_images(data_path):
-    processed_faces = []
-    labels = []
-    
+# Function to create a face recognizer and train it with known faces
+def train_recognizer(data_path):
+    face_recognizer = cv2.face.LBPHFaceRecognizer_create()
+    faces, labels = [], []
+
     for name in os.listdir(data_path):
         person_path = os.path.join(data_path, name)
         if os.path.isdir(person_path):
             label = int(name.split('_')[0])
             for image_name in os.listdir(person_path):
                 image_path = os.path.join(person_path, image_name)
-                image = cv2.imread(image_path)
-                gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-                
-                # Resize image to 200x200
-                resized_image = cv2.resize(gray_image, (200, 200))
-                
-                processed_faces.append(resized_image)
+                image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+                faces.append(image)
                 labels.append(label)
     
-    return np.array(processed_faces), np.array(labels)
-
-# Function to create and train a face recognizer
-def train_recognizer(data_path):
-    faces, labels = preprocess_images(data_path)
-    face_recognizer = cv2.face.LBPHFaceRecognizer_create()
-    face_recognizer.train(faces, labels)
+    face_recognizer.train(faces, np.array(labels))
     return face_recognizer
 
-# Function to save a new face
+# Function to save a new face with a unique label
 def save_face(image, name):
     if not os.path.exists('known_faces'):
         os.makedirs('known_faces')
@@ -61,7 +49,7 @@ if app_mode == "Add Face":
     uploaded_file = st.file_uploader("Upload an image", type=["jpg", "png"])
 
     if uploaded_file and name:
-        image = Image.open(uploaded_file).convert("RGB")
+        image = Image.open(uploaded_file).convert("L")
         st.image(image, caption=f"Uploaded Image of {name}", use_column_width=True)
         save_face(image, name)
         st.success(f"Face of {name} has been saved successfully!")
@@ -76,17 +64,20 @@ elif app_mode == "Identify Face":
         img_file_buffer = st.camera_input("Capture an image")
 
         if img_file_buffer is not None:
+            # To read image file buffer as a PIL Image:
             img = Image.open(img_file_buffer).convert("RGB")
+
+            # To convert PIL Image to numpy array:
             img_array = np.array(img)
             gray = cv2.cvtColor(img_array, cv2.COLOR_RGB2GRAY)
 
+            # Load the face cascade
             face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-            faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30), flags=cv2.CASCADE_SCALE_IMAGE)
+            faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
 
             if len(faces) > 0 and face_recognizer:
                 for (x, y, w, h) in faces:
                     face_roi = gray[y:y+h, x:x+w]
-                    face_roi = cv2.resize(face_roi, (200, 200))  # Ensure the face ROI matches the training size
                     label, confidence = face_recognizer.predict(face_roi)
                     name = "Unknown"
                     if confidence is not None and confidence < 100:
@@ -103,18 +94,16 @@ elif app_mode == "Identify Face":
         uploaded_file = st.file_uploader("Upload an image to identify", type=["jpg", "png"])
 
         if uploaded_file:
-            image = Image.open(uploaded_file).convert("RGB")
+            image = Image.open(uploaded_file).convert("L")
             st.image(image, caption="Uploaded Image", use_column_width=True)
             image_np = np.array(image)
-            gray = cv2.cvtColor(image_np, cv2.COLOR_RGB2GRAY)
 
             face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-            faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
+            faces = face_cascade.detectMultiScale(image_np, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
 
             if len(faces) > 0 and face_recognizer:
                 for (x, y, w, h) in faces:
-                    face_roi = gray[y:y+h, x:x+w]
-                    face_roi = cv2.resize(face_roi, (200, 200))  # Ensure the face ROI matches the training size
+                    face_roi = image_np[y:y+h, x:x+w]
                     label, confidence = face_recognizer.predict(face_roi)
                     name = "Unknown"
                     if confidence is not None and confidence < 100:
