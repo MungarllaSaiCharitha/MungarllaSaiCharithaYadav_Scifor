@@ -3,7 +3,6 @@ import cv2
 import os
 import numpy as np
 from PIL import Image
-from streamlit_webrtc import VideoProcessorBase, webrtc_streamer
 
 # Function to create a face recognizer and train it with known faces
 def train_recognizer(data_path):
@@ -61,27 +60,35 @@ elif app_mode == "Identify Face":
     mode = st.radio("Choose input method:", ("Webcam", "Upload Image"))
 
     if mode == "Webcam":
-        run = st.checkbox("Run")
-        FRAME_WINDOW = st.image([])
+        st.subheader("Take a picture")
+        img_file_buffer = st.camera_input("Capture an image")
 
-        class VideoProcessor(VideoProcessorBase):
-            def __init__(self):
-                self.i = 0
+        if img_file_buffer is not None:
+            # To read image file buffer as a PIL Image:
+            img = Image.open(img_file_buffer)
 
-            def recv(self, frame):
-                img = frame.to_ndarray(format="bgr24")
-                gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-                faces = face_cascade.detectMultiScale(gray, 1.3, 5)
-                self.i += 1
-                for (x, y, w, h) in faces:
-                    cv2.rectangle(img, (x, y), (x + w, y + h), (95, 207, 30), 3)
-                    cv2.rectangle(img, (x, y - 40), (x + w, y), (95, 207, 30), -1)
-                    cv2.putText(img, 'F-' + str(self.i), (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 0), 2)
-                return img
+            # To convert PIL Image to numpy array:
+            img_array = np.array(img)
 
-        if run:
+            # Process the image for face detection and recognition
+            gray = cv2.cvtColor(img_array, cv2.COLOR_BGR2GRAY)
             face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-            webrtc_streamer(key="example", video_processor_factory=VideoProcessor)
+            faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
+
+            if len(faces) > 0 and face_recognizer:
+                for (x, y, w, h) in faces:
+                    face_roi = gray[y:y+h, x:x+w]
+                    label, confidence = face_recognizer.predict(face_roi)
+                    name = "Unknown"
+                    if confidence is not None and confidence < 100:
+                        name = [name for name in os.listdir(data_path) if name.startswith(f"{label}_")][0].split('_')[1]
+
+                    cv2.rectangle(img_array, (x, y), (x+w, y+h), (0, 255, 0), 2)
+                    cv2.putText(img_array, name, (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+
+                st.image(img_array, caption="Processed Image", use_column_width=True)
+            else:
+                st.write("No faces detected or face recognizer is not trained.")
 
     elif mode == "Upload Image":
         uploaded_file = st.file_uploader("Upload an image to identify", type=["jpg", "png"])
