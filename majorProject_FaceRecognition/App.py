@@ -64,7 +64,7 @@ elif app_mode == "Identify Face":
         FRAME_WINDOW = st.image([])
 
         camera = cv2.VideoCapture(1)
-        if not cap.isOpened():
+        if not camera.isOpened():
          print("Cannot access the camera")
         else:
          print("Camera is accessible")
