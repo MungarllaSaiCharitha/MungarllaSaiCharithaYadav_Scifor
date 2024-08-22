@@ -1,16 +1,3 @@
-import streamlit as st
-import cv2
-import os
-import numpy as np
-from PIL import Image
-
-# Function to create a face recognizer and train it with known faces
-def train_recognizer(data_path):
-    face_recognizer = cv2.face.LBPHFaceRecognizer_create()
-    faces, labels = [], []
-
-    for name in os.listdir(data_path):
-        person_path = os.path.join(data_path, name)import streamlit as st
 import cv2
 import os
 import numpy as np
