@@ -68,7 +68,7 @@ elif app_mode == "Identify Face":
          print("Cannot access the camera")
         else:
          print("Camera is accessible")
-        cap.release()
+        camera.release()
         face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
         while run:
