@@ -81,7 +81,7 @@ elif app_mode == "Identify Face":
 
         if run:
             face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-            webrtc_streamer(key="example", video_transformer_factory=VideoTransformer)
+            webrtc_streamer(key="example", video_processor_factory=VideoTransformer)
 
     elif mode == "Upload Image":
         uploaded_file = st.file_uploader("Upload an image to identify", type=["jpg", "png"])
